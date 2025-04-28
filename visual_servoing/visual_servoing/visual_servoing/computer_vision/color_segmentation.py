@@ -39,10 +39,10 @@ def cd_color_segmentation(img, template):
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 	# image_print(hsv)
 
-	lower_orange = np.array([0, 220, 100]) #0, 220, 102
-	upper_orange = np.array([30, 255, 255]) #45, 255, 255
+	darker_white = np.array([134, 6, 89]) # rgba(214,227,217,255)
+	brighter_white = np.array([60, 1, 100]) # rgba(255,255,253,255)
 
-	mask = cv2.inRange(hsv, lower_orange, upper_orange)
+	mask = cv2.inRange(hsv, darker_white, brighter_white)
 	# image_print(mask)
 
 	kernel = np.ones((5, 5), np.uint8)
