@@ -29,19 +29,25 @@ def cd_color_segmentation(img, template):
 		img: np.3darray; the input image with a cone to be detected. BGR.
 		template_file_path; Not required, but can optionally be used to automate setting hue filter values.
 	Return:
-		bbox: ((x1, y1), (x2, y2)); the bounding box of the cone, unit in px
-				(x1, y1) is the top left of the bbox and (x2, y2) is the bottom right of the bbox
+		bbox: ((left_bottom, left_top), (right_bottom, right_top)); the bounding boxes of the cones, unit in px
+				For left box: (bottom_left, top_right)
+				For right box: (bottom_right, top_left)
 	"""
 	########## YOUR CODE STARTS HERE ##########
 
-	bounding_box = ((0,0),(0,0))
+	bounding_box = (((0,0),(0,0)), ((0,0),(0,0)))
+	# image_print(img)
+	# # Cut the image to the bottom half
+	# img = img[img.shape[0]//2:, :, :]
+	print(img.shape)
 	image_print(img)
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	image_print(hsv)
-
-	darker_white = np.array([75, 10, 178]) # rgba(214,227,217,255) -> white(134, 6, 89)
-	brighter_white = np.array([90, 26, 255]) # rgba(255,255,253,255) -> white(60, 1, 100)
-
+	
+	# Define color range for white
+	darker_white = np.array([75, 10, 178])
+	brighter_white = np.array([90, 26, 255])
+	
+	# Create mask and apply morphological operations
 	mask = cv2.inRange(hsv, darker_white, brighter_white)
 	image_print(mask)
 
@@ -49,26 +55,48 @@ def cd_color_segmentation(img, template):
 	kernel2 = np.ones((4, 4), np.uint8)
 	mask = cv2.erode(mask, kernel2, iterations=1)
 	mask = cv2.dilate(mask, kernel1, iterations=1)
-	# mask = cv2.erode(mask, kernel, iterations=1)
 	image_print(mask)
-    # Find external contours in the mask.
+
+	# Find contours
 	contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # If contours are found, select the two largest as the cone.
-	if contours:
+	
+	# Initialize default bounding boxes (no detection)
+	bounding_box = (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+	
+	# Process contours if found
+	if contours and len(contours) >= 2:
+		# Sort contours by area and take the two largest
 		largest_contours = sorted(contours, key=cv2.contourArea, reverse=True)[:2]
-		for contour in largest_contours:
-			x, y, w, h = cv2.boundingRect(contour)
-			bounding_box = ((x, y), (x + w, y + h))
-			cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
+		
+		# Get bounding rectangles for both contours
+		rect1 = cv2.boundingRect(largest_contours[0])
+		rect2 = cv2.boundingRect(largest_contours[1])
+		
+		# Ensure left contour is on the left side
+		if rect1[0] > rect2[0]:
+			rect1, rect2 = rect2, rect1
+		
+		# Extract coordinates for left box
+		left_x, left_y, left_w, left_h = rect1
+		left_bottom = (left_x, left_y + left_h)
+		left_top = (left_x + left_w, left_y)
+		
+		# Extract coordinates for right box
+		right_x, right_y, right_w, right_h = rect2
+		right_bottom = (right_x + right_w, right_y + right_h)
+		right_top = (right_x, right_y)
+		
+		# Set the bounding boxes
+		bounding_box = ((left_bottom, left_top), (right_bottom, right_top))
+		
+		# Draw rectangles for visualization
+		cv2.rectangle(img, (left_x, left_y), (left_x + left_w, left_y + left_h), (0, 0, 255), 2)
+		cv2.rectangle(img, (right_x, right_y), (right_x + right_w, right_y + right_h), (0, 0, 255), 2)
 		image_print(img)
-	else:
-		bounding_box = ((0, 0), (0, 0))
-
-
+	
 	########### YOUR CODE ENDS HERE ###########
-
-	# Return bounding box
+	
+	print(bounding_box)
 	return bounding_box
 
 
