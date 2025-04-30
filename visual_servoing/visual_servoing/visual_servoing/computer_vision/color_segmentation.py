@@ -92,8 +92,13 @@ def cd_color_segmentation(img, template):
 		# Draw rectangles for visualization
 		cv2.rectangle(img, (left_x, left_y), (left_x + left_w, left_y + left_h), (0, 0, 255), 2)
 		cv2.rectangle(img, (right_x, right_y), (right_x + right_w, right_y + right_h), (0, 0, 255), 2)
-		image_print(img)
+		
+
+		# Draw lines for visualization
+		cv2.line(img, (left_x, left_y + left_h),(left_x + left_w, left_y), (255,0,0), 6)
+		cv2.line(img, (right_x, right_y), (right_x + right_w, right_y + right_h), (255,0,0), 6)
 	
+		image_print(img)
 	########### YOUR CODE ENDS HERE ###########
 	
 	print(bounding_box)
