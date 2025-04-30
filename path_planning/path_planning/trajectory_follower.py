@@ -47,8 +47,6 @@ class PurePursuit(Node):
 
         self.traj_beginning = 0
 
-        self.all_trajectories = []
-
         drive_msg = AckermannDriveStamped()
         drive_msg.drive.speed = 0.0
         drive_msg.drive.steering_angle = 0.0
@@ -175,15 +173,10 @@ class PurePursuit(Node):
         self.trajectory.fromPoseArray(msg)
         self.trajectory.publish_viz(duration=0.0)
         traj_points = np.array(self.trajectory.points)
-        self.all_trajectories.append(traj_points.T)
         self.goal = traj_points[-1]
         self.traj_points = traj_points.T
 
-        self.get_logger().info(f"Trajectory points: {len(self.all_trajectories)}")
-        if len(self.all_trajectories) > 2:
-            self.initialized_traj = True
-        else:
-            self.initialized_traj = False
+        self.initialized_traj = True
 
     def create_point_marker(self, point, frame):
         marker = Marker()
