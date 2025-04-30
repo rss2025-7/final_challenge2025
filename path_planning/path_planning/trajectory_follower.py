@@ -29,7 +29,7 @@ class PurePursuit(Node):
 
         self.trajectory = LineTrajectory("/followed_trajectory")
 
-        self.traj_sub = self.create_subscription(Odometry,
+        self.odom_sub = self.create_subscription(Odometry,
                                                  self.odom_topic,
                                                  self.pose_callback,
                                                  1)
@@ -47,11 +47,15 @@ class PurePursuit(Node):
 
         self.traj_beginning = 0
 
+        self.all_trajectories = []
+
         drive_msg = AckermannDriveStamped()
         drive_msg.drive.speed = 0.0
         drive_msg.drive.steering_angle = 0.0
         self.stop = 0
         self.drive_pub.publish(drive_msg)
+
+        self.initialized_traj = False
 
 
     def find_point_along_trajectory(self, r, la, p1, p2):
@@ -95,7 +99,7 @@ class PurePursuit(Node):
         robot_position = odometry_msg.pose.pose.position
         robot_orientation = odometry_msg.pose.pose.orientation
         # self.get_logger().info("ODOM")
-        if self.trajectory.points:
+        if self.initialized_traj:
             drive_msg = AckermannDriveStamped()
 
             # x, y, yaw
@@ -164,46 +168,6 @@ class PurePursuit(Node):
                     return
             self.drive_pub.publish(drive_msg)
 
-        # # deconstructing pose
-        # robot_position = odometry_msg.pose.pose.position
-        # robot_orientation = odometry_msg.pose.pose.orientation
-
-        # if self.trajectory.points:
-        #     # x, y, yaw
-        #     robot_x = robot_position.x
-        #     robot_y = robot_position.y
-        #     robot_yaw = tf_transformations.euler_from_quaternion([robot_orientation.x, robot_orientation.y,
-        #                                                         robot_orientation.z, robot_orientation.w])
-        #     # check if each point is at lookahead distance
-        #     # self.get_logger().info(f"{self.trajectory.points}, {robot_x}, {robot_y}")
-        #     for point in self.trajectory.points:
-        #         dx = point[0] - robot_x
-        #         dy = point[1] - robot_y
-
-        #         robot_distance_to_point = np.hypot(dx, dy)
-
-        #         if robot_distance_to_point >= self.lookahead:
-        #             robot_lookahead_point = point
-        #             self.ptf_pub.publish(self.create_point_marker(robot_lookahead_point))
-        #             break
-
-        #     # self.get_logger().info(f"{robot_lookahead_point}")
-
-        #     # transforming from global frame to robot frame
-        #     # self.get_logger().info(f"{robot_yaw, type(robot_yaw), type(robot_lookahead_point[0]), robot_lookahead_point[0], type(robot_x), robot_x}")
-        #     rframe_lookahead_x = np.cos(-robot_yaw[0]) * (robot_lookahead_point[0] - robot_x) - np.sin(-robot_yaw[0]) * (robot_lookahead_point[1] - robot_y)
-        #     rframe_lookahead_y = np.sin(-robot_yaw[0]) * (robot_lookahead_point[0] - robot_x) + np.cos(-robot_yaw[0]) * (robot_lookahead_point[1] - robot_y)
-
-        #     # pure pursuit algorithm
-        #     curvature = (2 * rframe_lookahead_y) / (self.lookahead ** 2)
-        #     steering_angle = np.arctan(self.wheelbase_length * curvature)
-
-        #     # adjusting drive msg and publishing
-        #     drive_msg = AckermannDriveStamped()
-        #     drive_msg.drive.speed = self.speed
-        #     drive_msg.drive.steering_angle = steering_angle
-        #     self.drive_pub.publish(drive_msg)
-
     def trajectory_callback(self, msg):
         self.get_logger().info(f"Receiving new trajectory {len(msg.poses)} points")
 
@@ -211,10 +175,15 @@ class PurePursuit(Node):
         self.trajectory.fromPoseArray(msg)
         self.trajectory.publish_viz(duration=0.0)
         traj_points = np.array(self.trajectory.points)
+        self.all_trajectories.append(traj_points.T)
         self.goal = traj_points[-1]
         self.traj_points = traj_points.T
 
-        self.initialized_traj = True
+        self.get_logger().info(f"Trajectory points: {len(self.all_trajectories)}")
+        if len(self.all_trajectories) > 2:
+            self.initialized_traj = True
+        else:
+            self.initialized_traj = False
 
     def create_point_marker(self, point, frame):
         marker = Marker()

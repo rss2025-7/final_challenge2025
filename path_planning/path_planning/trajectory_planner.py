@@ -132,9 +132,11 @@ class PathPlan(Node):
             if dist_to_banana1 < dist_to_banana2:
                 self.plan_path(self.current_pose, self.banana1, self.map_data)
                 self.plan_path(self.banana1, self.banana2, self.map_data)
+                self.plan_path(self.banana2, self.current_pose, self.map_data)
             else:
                 self.plan_path(self.current_pose, self.banana2, self.map_data)
                 self.plan_path(self.banana2, self.banana1, self.map_data)
+                self.plan_path(self.banana1, self.current_pose, self.map_data)
 
     def goal_cb(self, msg):
         # we don't need to run search on orientation
