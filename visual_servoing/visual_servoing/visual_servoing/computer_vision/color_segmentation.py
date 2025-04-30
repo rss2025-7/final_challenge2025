@@ -45,20 +45,22 @@ def cd_color_segmentation(img, template):
 	mask = cv2.inRange(hsv, darker_white, brighter_white)
 	image_print(mask)
 
-	kernel = np.ones((5, 5), np.uint8)
-	# mask = cv2.erode(mask, kernel, iterations=2)
-	mask = cv2.dilate(mask, kernel, iterations=1)
+	kernel1 = np.ones((5, 5), np.uint8)
+	kernel2 = np.ones((4, 4), np.uint8)
+	mask = cv2.erode(mask, kernel2, iterations=1)
+	mask = cv2.dilate(mask, kernel1, iterations=1)
 	# mask = cv2.erode(mask, kernel, iterations=1)
 	image_print(mask)
     # Find external contours in the mask.
 	contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # If contours are found, select the largest as the cone.
+    # If contours are found, select the two largest as the cone.
 	if contours:
-		largest_contour = max(contours, key=cv2.contourArea)
-		x, y, w, h = cv2.boundingRect(largest_contour)
-		bounding_box = ((x, y), (x + w, y + h))
-		cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
+		largest_contours = sorted(contours, key=cv2.contourArea, reverse=True)[:2]
+		for contour in largest_contours:
+			x, y, w, h = cv2.boundingRect(contour)
+			bounding_box = ((x, y), (x + w, y + h))
+			cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
 		image_print(img)
 	else:
 		bounding_box = ((0, 0), (0, 0))
