@@ -35,21 +35,21 @@ def cd_color_segmentation(img, template):
 	########## YOUR CODE STARTS HERE ##########
 
 	bounding_box = ((0,0),(0,0))
-	# image_print(img)
+	image_print(img)
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	# image_print(hsv)
+	image_print(hsv)
 
-	darker_white = np.array([134, 6, 89]) # rgba(214,227,217,255)
-	brighter_white = np.array([60, 1, 100]) # rgba(255,255,253,255)
+	darker_white = np.array([75, 10, 178]) # rgba(214,227,217,255) -> white(134, 6, 89)
+	brighter_white = np.array([90, 26, 255]) # rgba(255,255,253,255) -> white(60, 1, 100)
 
 	mask = cv2.inRange(hsv, darker_white, brighter_white)
-	# image_print(mask)
+	image_print(mask)
 
 	kernel = np.ones((5, 5), np.uint8)
 	# mask = cv2.erode(mask, kernel, iterations=2)
 	mask = cv2.dilate(mask, kernel, iterations=1)
 	# mask = cv2.erode(mask, kernel, iterations=1)
-	# image_print(mask)
+	image_print(mask)
     # Find external contours in the mask.
 	contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -59,7 +59,7 @@ def cd_color_segmentation(img, template):
 		x, y, w, h = cv2.boundingRect(largest_contour)
 		bounding_box = ((x, y), (x + w, y + h))
 		cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
-		# image_print(img)
+		image_print(img)
 	else:
 		bounding_box = ((0, 0), (0, 0))
 
