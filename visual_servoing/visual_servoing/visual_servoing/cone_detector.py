@@ -51,19 +51,57 @@ class ConeDetector(Node):
 
         image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        if self.LineFollower:
-            cv2.rectangle(image, (0,0), (640, 180), [255, 255, 255], -1)
-            cv2.rectangle(image, (0, 275), (640, 360), [255,255,255], -1)
+        # if self.LineFollower:
+        #     cv2.rectangle(image, (0,0), (640, 180), [255, 255, 255], -1)
+        #     cv2.rectangle(image, (0, 275), (640, 360), [255,255,255], -1)
             
         bbox = cd_color_segmentation(image, None)
-        bottomv = float(bbox[1][1])
-        bottomu = float(bbox[1][0] + bbox[0][0])//2
-        conepx.u, conepx.v = bottomu, bottomv
+        # bottomv = float(bbox[1][1])
+        # bottomu = float(bbox[1][0] + bbox[0][0])//2
+
+        # Assumption input: 
+        # bbox for left and right white lines. 
+        # The left box gives the bottom left, top right corners of the cone.
+        # The right box gives the bottom right, top left corners of the cone.
+
+        #To-do: Haven't taken the middle point. Just take the top and the bottom
+
+        left_bbox = bbox[0]
+        right_bbox = bbox[1]
+
+        left_bbox_bottom_left = float(left_bbox[0])
+        left_bbox_top_right = float(left_bbox[1])
+        right_bbox_bottom_right = float(right_bbox[0])
+        right_bbox_top_left = float(right_bbox[1])
+
+        # Find the left line
+        left_line_slope = (left_bbox_top_right[1] - left_bbox_bottom_left[1]) / (left_bbox_top_right[0] - left_bbox_bottom_left[0])
+        left_line_intercept = left_bbox_bottom_left[1] - left_line_slope * left_bbox_bottom_left[0]
+
+        # Find the right line
+        right_line_slope = (right_bbox_top_left[1] - right_bbox_bottom_right[1]) / (right_bbox_top_left[0] - right_bbox_bottom_right[0])
+        right_line_intercept = right_bbox_bottom_right[1] - right_line_slope * right_bbox_bottom_right[0]
+
+        # Find the intersection of the two lines
+        # y1 = k1 * x1 + b1
+        # y2 = k2 * x2 + b2
+        # k1 * x + b1 = k2 * x + b2 -> (k1-k2)*x = b2 - b1 -> x = (b2-b1)/(k1 - k2)
+
+        x_intersect = (right_line_intercept - left_line_intercept) / (left_line_slope - right_line_slope)
+        y_intersect = left_line_slope * x_intersect + left_line_intercept
+        
+        #To-do: Bring it closer?
+        conepx.u, conepx.v = x_intersect, y_intersect
+
 
         self.cone_pub.publish(conepx)
         # img with bounding box
-        bbox_top_left = bbox[0][0], bbox[0][1]
-        bbox_bot_right = bbox[1][0], bbox[1][1]
+        # bbox_top_left = bbox[0][0], bbox[0][1]
+        # bbox_bot_right = bbox[1][0], bbox[1][1]
+
+        #To-do: The boxing dimension may be different
+        bbox_top_left = x_intersect - 10, y_intersect - 10
+        bbox_bot_right = x_intersect + 10, y_intersect + 10
         cv2.rectangle(image, bbox_top_left, bbox_bot_right, (0,0,255), 2)
         debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
         self.debug_pub.publish(debug_msg)
