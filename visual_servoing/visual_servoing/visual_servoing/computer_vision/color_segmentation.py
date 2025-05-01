@@ -38,23 +38,23 @@ def cd_color_segmentation(img, template):
 	bounding_box = (((0,0),(0,0)), ((0,0),(0,0)))
 	image_print(img)
 	# Cut the image to the bottom half
-	img = img[img.shape[0]//3:,:, :]
+	img = img[img.shape[0]//9:img.shape[0]//10*9,img.shape[1]//5:img.shape[1]//5*4, :]
 	##print(img.shape)
-	image_print(img)
+	#image_print(img)
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 	
 	# Define color range for white
-	darker_white = np.array([75, 10, 178])
-	brighter_white = np.array([90, 26, 255])
+	darker_white = np.array([30, 10, 150])
+	brighter_white = np.array([100, 70, 255])
 	
 	# Create mask and apply morphological operations
 	mask = cv2.inRange(hsv, darker_white, brighter_white)
 	image_print(mask)
 
-	kernel1 = np.ones((5, 5), np.uint8)
-	kernel2 = np.ones((4, 4), np.uint8)
-	mask = cv2.erode(mask, kernel2, iterations=1)
-	mask = cv2.dilate(mask, kernel1, iterations=4)
+	kernel1 = np.ones((5, 5), np.uint8) #5, 5
+	kernel2 = np.ones((3, 3), np.uint8) #4, 4
+	mask = cv2.erode(mask, kernel2, iterations=2)
+	mask = cv2.dilate(mask, kernel1, iterations=3)
 	image_print(mask)
 
 	# Find contours
