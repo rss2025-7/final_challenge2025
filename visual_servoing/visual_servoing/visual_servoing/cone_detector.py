@@ -60,36 +60,41 @@ class ConeDetector(Node):
         # bottomu = float(bbox[1][0] + bbox[0][0])//2
 
         # Assumption input: 
-        # bbox for left and right white lines. 
-        # The left box gives the bottom left, top right corners of the cone.
-        # The right box gives the bottom right, top left corners of the cone.
+        # bbox for two white lines.
 
-        #To-do: Haven't taken the middle point. Just take the top and the bottom
+        bbox1 = bbox[0]
+        bbox2 = bbox[1]
 
-        left_bbox = bbox[0]
-        right_bbox = bbox[1]
+        box1_pt1 = float(bbox1[0])
+        box1_pt2 = float(bbox1[1])
+        box2_pt1 = float(bbox2[0])
+        box2_pt2 = float(bbox2[1])
 
-        left_bbox_bottom_left = float(left_bbox[0])
-        left_bbox_top_right = float(left_bbox[1])
-        right_bbox_bottom_right = float(right_bbox[0])
-        right_bbox_top_left = float(right_bbox[1])
+        # Find the first line
+        line1_slope = (box1_pt2[1] - box1_pt1[1]) / (box1_pt2[0] - box1_pt1[0])
+        line1_intercept = box1_pt1[1] - line1_slope * box1_pt1[0]
 
-        # Find the left line
-        left_line_slope = (left_bbox_top_right[1] - left_bbox_bottom_left[1]) / (left_bbox_top_right[0] - left_bbox_bottom_left[0])
-        left_line_intercept = left_bbox_bottom_left[1] - left_line_slope * left_bbox_bottom_left[0]
-
-        # Find the right line
-        right_line_slope = (right_bbox_top_left[1] - right_bbox_bottom_right[1]) / (right_bbox_top_left[0] - right_bbox_bottom_right[0])
-        right_line_intercept = right_bbox_bottom_right[1] - right_line_slope * right_bbox_bottom_right[0]
+        # Find the second line
+        line2_slope = (box2_pt2[1] - box2_pt1[1]) / (box2_pt2[0] - box2_pt1[0])
+        line2_intercept = box2_pt1[1] - line2_slope * box2_pt1[0]
 
         # Find the intersection of the two lines
         # y1 = k1 * x1 + b1
         # y2 = k2 * x2 + b2
         # k1 * x + b1 = k2 * x + b2 -> (k1-k2)*x = b2 - b1 -> x = (b2-b1)/(k1 - k2)
+        x_intersect = (line2_intercept - line1_intercept) / (line1_slope - line2_slope)
+        y_intersect = line1_slope * x_intersect + line1_intercept
 
-        x_intersect = (right_line_intercept - left_line_intercept) / (left_line_slope - right_line_slope)
-        y_intersect = left_line_slope * x_intersect + left_line_intercept
-        
+        #if no left line
+        if line1_slope <= 0 and line2_slope <= 0:
+            x_intersect = 0
+            y_intersect = image.shape[0]//2
+        #if no right line
+        elif line1_slope >= 0 and line2_slope >= 0:
+            x_intersect = image.shape[1] - 1
+            y_intersect = image.shape[0]//2
+
+
         #To-do: Bring it closer?
         conepx.u, conepx.v = x_intersect, y_intersect
 

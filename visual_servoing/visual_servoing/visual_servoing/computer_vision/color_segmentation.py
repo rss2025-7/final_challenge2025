@@ -33,13 +33,13 @@ def cd_color_segmentation(img, template):
 				For left box: (bottom_left, top_right)
 				For right box: (bottom_right, top_left)
 	"""
-	########## YOUR CODE STARTS HERE ##########
+	########## Todo: make the code run faster in real time ##########
 
 	bounding_box = (((0,0),(0,0)), ((0,0),(0,0)))
-	# image_print(img)
-	# # Cut the image to the bottom half
-	# img = img[img.shape[0]//2:, :, :]
-	print(img.shape)
+	image_print(img)
+	# Cut the image to the bottom half
+	img = img[img.shape[0]//3:,:, :]
+	##print(img.shape)
 	image_print(img)
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 	
@@ -54,49 +54,63 @@ def cd_color_segmentation(img, template):
 	kernel1 = np.ones((5, 5), np.uint8)
 	kernel2 = np.ones((4, 4), np.uint8)
 	mask = cv2.erode(mask, kernel2, iterations=1)
-	mask = cv2.dilate(mask, kernel1, iterations=1)
+	mask = cv2.dilate(mask, kernel1, iterations=4)
 	image_print(mask)
 
 	# Find contours
 	contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 	
 	# Initialize default bounding boxes (no detection)
-	bounding_box = (((0, 0), (0, 0)), ((0, 0), (0, 0)))
-	
-	# Process contours if found
-	if contours and len(contours) >= 2:
-		# Sort contours by area and take the two largest
-		largest_contours = sorted(contours, key=cv2.contourArea, reverse=True)[:2]
+	bounding_box = []
+
+	line_num = 0
+	largest_contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+	for contour in largest_contours:
+		rect = cv2.minAreaRect(contour)
+
+		#filter out horizontal lines
+		angle = rect[2]
+		if rect[1][0] < rect[1][1]:
+			angle += 90
+		threshold = 15
+		if abs(angle) < threshold or abs(angle - 180) < threshold:
+			continue
+
+		box = cv2.boxPoints(rect)
+		box = np.int32(box)
+		cv2.drawContours(img, [box], 0, (0,0,255), 2)
+
+		p1, p2, p3, p4 = box
+		dis12 = np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+		dis13 = np.sqrt((p1[0] - p3[0])**2 + (p1[1] - p3[1])**2)
+		dis14 = np.sqrt((p1[0] - p4[0])**2 + (p1[1] - p4[1])**2)
+
+		if dis12 < dis13 and dis12 < dis14:
+			p1_rect1 = (max(0, int((p1[0] + p2[0])/2.0)), max(0, int((p1[1] + p2[1])/2.0)))
+			p2_rect1 = (max(0, int((p3[0] + p4[0])/2.0)), max(0, int((p3[1] + p4[1])/2.0)))	
+		elif dis13 < dis12 and dis13 < dis14:
+			p1_rect1 = (max(0, int((p1[0] + p3[0])/2.0)), max(0, int((p1[1] + p3[1])/2.0)))
+			p2_rect1 = (max(0, int((p2[0] + p4[0])/2.0)), max(0, int((p2[1] + p4[1])/2.0)))
+		else:
+			p1_rect1 = (max(0, int((p1[0] + p4[0])/2.0)), max(0, int((p1[1] + p4[1])/2.0)))
+			p2_rect1 = (max(0, int((p2[0] + p3[0])/2.0)), max(0, int((p2[1] + p3[1])/2.0)))
 		
-		# Get bounding rectangles for both contours
-		rect1 = cv2.boundingRect(largest_contours[0])
-		rect2 = cv2.boundingRect(largest_contours[1])
+		cv2.line(img, p1_rect1, p2_rect1, (0,255,0), 2)
+		bounding_box.append((p1_rect1, p2_rect1))
+
+		line_num += 1
+		if line_num == 2:
+			break
 		
-		# Ensure left contour is on the left side
-		if rect1[0] > rect2[0]:
-			rect1, rect2 = rect2, rect1
-		
-		# Extract coordinates for left box
-		left_x, left_y, left_w, left_h = rect1
-		left_bottom = (left_x, left_y + left_h)
-		left_top = (left_x + left_w, left_y)
-		
-		# Extract coordinates for right box
-		right_x, right_y, right_w, right_h = rect2
-		right_bottom = (right_x + right_w, right_y + right_h)
-		right_top = (right_x, right_y)
-		
-		# Set the bounding boxes
-		bounding_box = ((left_bottom, left_top), (right_bottom, right_top))
-		
-		# Draw rectangles for visualization
-		cv2.rectangle(img, (left_x, left_y), (left_x + left_w, left_y + left_h), (0, 0, 255), 2)
-		cv2.rectangle(img, (right_x, right_y), (right_x + right_w, right_y + right_h), (0, 0, 255), 2)
-		image_print(img)
-	
-	########### YOUR CODE ENDS HERE ###########
-	
+	if len(bounding_box) == 1:
+		bounding_box.append(bounding_box[0])
+	elif len(bounding_box) == 0:
+		raise ValueError("No bounding box found")
 	print(bounding_box)
+	image_print(img)
+	
+	bounding_box = ((0,0),(0,0))
 	return bounding_box
 
 
