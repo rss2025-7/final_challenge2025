@@ -25,8 +25,8 @@ class ParkingController(Node):
         self.create_subscription(ConeLocation, "/relative_cone",
             self.relative_cone_callback, 1)
 
-        self.parking_distance = .75 # meters; try playing with this number!
-        self.look_ahead = 0.5
+        self.parking_distance = .5 # meters; try playing with this number!
+        self.look_ahead = 1.1
         self.relative_x = 0
         self.relative_y = 0
         self.wheelbase = 0.34
@@ -64,7 +64,7 @@ class ParkingController(Node):
 
         if self.moving_backward is False:
             if error_distance > 0.1:
-                velo = 0.5
+                velo = 4.0 # change to 0.5/4
                 steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)
             else:
                 if np.abs(np.arctan2(self.relative_y, self.relative_x)) > .175: #10 degrees
@@ -76,15 +76,23 @@ class ParkingController(Node):
             self.backward_count += 1
             if self.backward_count <= 5:
                 steer_angle = -1*np.sign(way_x)* (0.35) #desired angle in radians
-                self.get_logger().info(f"steering angle backward: {steer_angle}")
+                # self.get_logger().info(f"steering angle backward: {steer_angle}")
             elif self.backward_count == 10:
-                self.get_logger().info(f"count: {self.backward_count}")
+                # self.get_logger().info(f"count: {self.backward_count}")
                 self.moving_backward = False
                 self.backward_count = 0
             steer_angle = 0.0
-
-
-
+        clipping_angle = 2.1
+        # 8 for 2 m/s
+        if steer_angle > np.deg2rad(clipping_angle):
+            # self.get_logger().info(f"Clipped {np.deg2rad(steer_angle)} to {np.deg2rad(20)}")
+            steer_angle = np.deg2rad(clipping_angle)
+        if steer_angle <= np.deg2rad(0.001) and steer_angle >= np.deg2rad(0.001):
+            self.get_logger().info(f"clipped {steer_angle} to {np.deg2rad(0.001)}")
+            steer_angle = np.deg2rad(0.001)
+        if steer_angle <= np.deg2rad(-clipping_angle):
+            # self.get_logger().info(f"Clipped {np.deg2rad(steer_angle)} to {np.deg2rad(-20)}")
+            steer_angle = np.deg2rad(-clipping_angle)
 
 
         drive_cmd.header.stamp = self.get_clock().now().to_msg()
