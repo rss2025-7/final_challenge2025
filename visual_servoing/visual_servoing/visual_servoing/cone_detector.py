@@ -11,6 +11,8 @@ from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point #geometry_msgs not in CMake file
 from vs_msgs.msg import ConeLocationPixel
 
+from std_msgs.msg import Bool
+
 # import your color segmentation algorithm; call this function in ros_image_callback!
 from computer_vision.color_segmentation import cd_color_segmentation
 
@@ -30,6 +32,7 @@ class ConeDetector(Node):
         self.cone_pub = self.create_publisher(ConeLocationPixel, "/relative_cone_px", 10)
         self.debug_pub = self.create_publisher(Image, "/cone_debug_img", 10)
         self.image_sub = self.create_subscription(Image, "/zed/zed_node/rgb/image_rect_color", self.image_callback, 5)
+        self.edge_case_pub = self.create_publisher(Bool, "/edge_case_detector", 10)
         self.bridge = CvBridge() # Converts between ROS images and OpenCV Images
 
         self.get_logger().info("Cone Detector Initialized")
@@ -83,12 +86,49 @@ class ConeDetector(Node):
             line1_slope = (float(box1_pt2[1]) - float(box1_pt1[1])) / (float(box1_pt2[0]) - float(box1_pt1[0]))
             line1_intercept = float(box1_pt1[1]) - line1_slope * float(box1_pt1[0])
         except:
+            # x_intersect = 440 #420 -> 440
+            # y_intersect = image.shape[0]/2
+            # conepx.u, conepx.v = float(x_intersect), float(y_intersect)
+
+            # self.cone_pub.publish(conepx)
+            # bbox_top_left = (int(x_intersect - 10) , int(y_intersect - 10))
+            # bbox_bot_right = (int(x_intersect + 10), int(y_intersect + 10))
+            # cv2.rectangle(image, bbox_top_left, bbox_bot_right, (0,255,0), 2)
+            # # cv2.rectangle(image, box1_pt1, box1_pt2, (0,0,255), 2)
+            # # cv2.rectangle(image, box2_pt1, box2_pt2, (0,0,255), 2)
+            # debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
+            # self.debug_pub.publish(debug_msg)
+            debug_msg = Bool(data = True)
+            self.edge_case_pub.publish(debug_msg)
+
+            cv2.putText(image, "No Box", (220, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            debug_msg_pict = self.bridge.cv2_to_imgmsg(image, "bgr8")
+            self.debug_pub.publish(debug_msg_pict)
+
             return
         try:
             # Find the second line
             line2_slope = (float(box2_pt2[1]) - float(box2_pt1[1])) / (float(box2_pt2[0]) - float(box2_pt1[0]))
             line2_intercept = float(box2_pt1[1]) - line2_slope * float(box2_pt1[0])
         except:
+            # x_intersect = 200 #420 -> 440
+            # y_intersect = image.shape[0]/2
+            # conepx.u, conepx.v = float(x_intersect), float(y_intersect)
+
+            # self.cone_pub.publish(conepx)
+            # bbox_top_left = (int(x_intersect - 10) , int(y_intersect - 10))
+            # bbox_bot_right = (int(x_intersect + 10), int(y_intersect + 10))
+            # cv2.rectangle(image, bbox_top_left, bbox_bot_right, (0,255,0), 2)
+            # # cv2.rectangle(image, box1_pt1, box1_pt2, (0,0,255), 2)
+            # # cv2.rectangle(image, box2_pt1, box2_pt2, (0,0,255), 2)
+            # debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
+            # self.debug_pub.publish(debug_msg)
+            debug_msg = Bool(data = True)
+            self.edge_case_pub.publish(debug_msg)
+
+            cv2.putText(image, "Only one line", (220, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            debug_msg_pict = self.bridge.cv2_to_imgmsg(image, "bgr8")
+            self.debug_pub.publish(debug_msg_pict)
             return
 
         # Find the intersection of the two lines
@@ -99,23 +139,41 @@ class ConeDetector(Node):
             x_intersect = (line2_intercept - line1_intercept) / (line1_slope - line2_slope)
             y_intersect = line1_slope * x_intersect + line1_intercept
 
-            bottom_x = 475.0 # 480 -> 460 ! --> 500 -> 460
+            bottom_x = 480.0 # 480 -> 460 ! --> 500 -> 460
             bottom_y = 360.0
 
             x_intersect = x_intersect*4/5 + bottom_x/5
             y_intersect = y_intersect*4/5 + bottom_y/5
         except:
+            # x_intersect = 200 #420 -> 440
+            # y_intersect = image.shape[0]/2
+            # conepx.u, conepx.v = float(x_intersect), float(y_intersect)
+
+            # self.cone_pub.publish(conepx)
+            # bbox_top_left = (int(x_intersect - 10) , int(y_intersect - 10))
+            # bbox_bot_right = (int(x_intersect + 10), int(y_intersect + 10))
+            # cv2.rectangle(image, bbox_top_left, bbox_bot_right, (0,255,0), 2)
+            # # cv2.rectangle(image, box1_pt1, box1_pt2, (0,0,255), 2)
+            # # cv2.rectangle(image, box2_pt1, box2_pt2, (0,0,255), 2)
+            # debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
+            # self.debug_pub.publish(debug_msg)
+            debug_msg = Bool(data = True)
+            self.edge_case_pub.publish(debug_msg)
+
+            cv2.putText(image, "Only One Line", (220, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            debug_msg_pict = self.bridge.cv2_to_imgmsg(image, "bgr8")
+            self.debug_pub.publish(debug_msg_pict)
             return
 
         # threshold_straight = 1.2
         # if no left line
         if line1_slope <= 0 and line2_slope <= 0:
             # x_intersect = 0.0
-            x_intersect = 440 #420
+            x_intersect = 440 #420   #440
             y_intersect = image.shape[0]/2
         # if no right line
         elif line1_slope >= 0 and line2_slope >= 0:
-            x_intersect = 200
+            x_intersect = 200       #200
             # x_intersect = image.shape[1] - 1
             y_intersect = image.shape[0]/2
         # elif line1_slope <= threshold_straight and line2_slope <= threshold_straight and line1_slope >= -threshold_straight and line2_slope >= -threshold_straight:
@@ -140,6 +198,8 @@ class ConeDetector(Node):
         # cv2.rectangle(image, box2_pt1, box2_pt2, (0,0,255), 2)
         debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
         self.debug_pub.publish(debug_msg)
+        debug_msg = Bool(data = False)
+        self.edge_case_pub.publish(debug_msg)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -149,3 +209,7 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
+
+# Possible imnprovements:
+#1. If only one positive/ or one negative, it goes in a wrong direction
