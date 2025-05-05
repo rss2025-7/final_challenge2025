@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'heist_state = heist_controller.heist_state:main',
+            'safety = heist_controller.safety:main',
         ],
     },
 )

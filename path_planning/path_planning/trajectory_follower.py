@@ -2,10 +2,11 @@ import rclpy
 from ackermann_msgs.msg import AckermannDriveStamped
 from geometry_msgs.msg import PoseArray
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Int32
 from rclpy.node import Node
 import numpy as np
 import tf_transformations
-
+from heist_msgs.msg import HeistState
 from visualization_msgs.msg import Marker
 
 from .utils import LineTrajectory
@@ -23,8 +24,12 @@ class PurePursuit(Node):
         self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         self.drive_topic = self.get_parameter('drive_topic').get_parameter_value().string_value
 
-        self.lookahead = 2.0  # FILL IN #
-        self.speed = 1.5  # FILL IN #
+
+        self.state_pub = self.create_publisher(Int32, "/change_info", 1)
+        self.state_sub = self.create_subscription(HeistState, "/heist_state", self.state_callback, 1)
+
+        self.lookahead = 1.5  # FILL IN #
+        self.speed = 0.5  # FILL IN #
         self.wheelbase_length = 0.34  # FILL IN #
 
         self.trajectory = LineTrajectory("/followed_trajectory")
@@ -54,6 +59,8 @@ class PurePursuit(Node):
         self.drive_pub.publish(drive_msg)
 
         self.initialized_traj = False
+    def state_callback(self, msg):
+        pass
 
 
     def find_point_along_trajectory(self, r, la, p1, p2):
@@ -104,10 +111,10 @@ class PurePursuit(Node):
             robot_x = robot_position.x
             robot_y = robot_position.y
 
-            if np.hypot(robot_x - self.goal[0], robot_y - self.goal[1]) <= 0.5:
-                drive_msg.drive.speed = 0.0
-                drive_msg.drive.steering_angle = 0.0
-                self.stop = True
+            # if np.hypot(robot_x - self.goal[0], robot_y - self.goal[1]) <= 0.5:
+            #     drive_msg.drive.speed = 0.0
+            #     drive_msg.drive.steering_angle = 0.0
+            #     self.stop = True
 
             if not self.stop:
                 robot_yaw = tf_transformations.euler_from_quaternion([robot_orientation.x, robot_orientation.y,
@@ -148,6 +155,7 @@ class PurePursuit(Node):
                         point_to_follow = robot_lookahead_point[0], robot_lookahead_point[1]
                         self.ptf_pub.publish(self.create_point_marker(point_to_follow, "/map"))
                         break
+                self.ptf_pub.publish(self.create_point_marker(point_to_follow, "/map"))
                 try:
                     # transforming from global frame to robot frame
                     # self.get_logger().info(f"{robot_yaw, type(robot_yaw), type(robot_lookahead_point[0]), robot_lookahead_point[0], type(robot_x), robot_x}")

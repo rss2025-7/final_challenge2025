@@ -20,7 +20,6 @@ class Obj(Enum):
 class HeistStatePublisher(Node):
     '''
     '''
-
     def __init__(self):
         super().__init__("HeistStatePub")
         self.publisher = self.create_publisher(HeistState, "/heist_state", 1)

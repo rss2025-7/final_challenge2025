@@ -22,10 +22,10 @@ class ParkingController(Node):
         self.drive_pub = self.create_publisher(AckermannDriveStamped, DRIVE_TOPIC, 10)
         self.error_pub = self.create_publisher(ParkingError, "/parking_error", 10)
 
-        self.create_subscription(ConeLocation, "/relative_cone",
+        self.create_subscription(ConeLocation, "/relative_banana",
             self.relative_cone_callback, 1)
 
-        self.parking_distance = .75 # meters; try playing with this number!
+        self.parking_distance = 1.0 # meters; try playing with this number!
         self.look_ahead = 0.5
         self.relative_x = 0
         self.relative_y = 0
@@ -66,11 +66,13 @@ class ParkingController(Node):
             if error_distance > 0.1:
                 velo = 0.5
                 steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)
+                self.get_logger().info("RUNNING")
             else:
                 if np.abs(np.arctan2(self.relative_y, self.relative_x)) > .175: #10 degrees
                     self.moving_backward = True
                 velo = 0.0
                 steer_angle = 0.0
+                self.get_logger().info("STOPPED!")
         else:
             velo = -0.5
             self.backward_count += 1
