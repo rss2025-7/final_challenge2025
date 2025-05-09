@@ -27,6 +27,7 @@ class ConeDetector(Node):
         super().__init__("cone_detector")
         # toggle line follower vs cone parker
         self.LineFollower = True
+        self.LineFollower = True
 
         # Subscribe to ZED camera RGB frames
         self.cone_pub = self.create_publisher(ConeLocationPixel, "/relative_cone_px", 10)
