@@ -73,7 +73,7 @@ def cd_color_segmentation(img, template):
         angle = rect[2]
         if rect[1][0] < rect[1][1]:
             angle += 90
-        threshold1 = 10 #15
+        threshold1 = 12 #15 -> 10
         # threshold2 = 40
         # if abs(angle) < threshold1 or abs(angle - 180) < threshold1 or abs(angle) > threshold2 or abs(angle - 180) > threshold2:
         #     continue
