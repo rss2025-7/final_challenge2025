@@ -24,6 +24,15 @@ class RedStop(Node):
         self.red_image_debug_pub = self.create_publisher(Image, "/red_light/image_debug", 10)
         self.cropped_image_debug_pub = self.create_publisher(Image, "/red_light/crop_debug", 10)
 
+        self.stop_msg = AckermannDriveStamped()
+        self.stop_msg.header.stamp = self.get_clock().now().to_msg()
+        self.stop_msg.header.frame_id = "base_link"
+        self.stop_msg.drive.steering_angle = 0.0
+        self.stop_msg.drive.steering_angle_velocity = 0.0
+        self.stop_msg.drive.speed = 0.0
+        self.stop_msg.drive.acceleration = 0.0
+        self.stop_msg.drive.jerk = 0.0
+
         # for testing
         # self.timer = self.create_timer(0.05, self.on_timer)
         # self.test_drive_pub = self.create_publisher(AckermannDriveStamped, "/vesc/high_level/input/nav_0", 10)
@@ -45,16 +54,8 @@ class RedStop(Node):
                 self.get_logger().info("Red light detected")
 
                 # stop the car
-                drive_msg = AckermannDriveStamped()
-                drive_msg.header.stamp = self.get_clock().now().to_msg()
-                drive_msg.header.frame_id = "base_link"
-                drive_msg.drive.steering_angle = 0.0
-                drive_msg.drive.steering_angle_velocity = 0.0
-                drive_msg.drive.speed = 0.0
-                drive_msg.drive.acceleration = 0.0
-                drive_msg.drive.jerk = 0.0
+                self.drive_pub.publish(self.stop_msg)
 
-                self.drive_pub.publish(drive_msg)
                 cv2.rectangle(image_copy, bounding_box[0], bounding_box[1], (255,0,255), 2)
                 cv2.putText(image_copy, "RED LIGHT", (240, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,255), 2)
             debug_msg = self.bridge.cv2_to_imgmsg(np.array(cropped_image), "bgr8")
@@ -62,7 +63,7 @@ class RedStop(Node):
 
 
         else:
-            self.get_logger().info("No red light")
+            # self.get_logger().info("No red light")
             # self.get_logger().info("No red light detected")
             cv2.putText(image_copy, "NO RED LIGHT", (220, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,255), 2)
 

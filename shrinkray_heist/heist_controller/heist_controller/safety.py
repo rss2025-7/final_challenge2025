@@ -8,7 +8,7 @@ from sensor_msgs.msg import LaserScan
 class SafetyController(Node):
 
     def __init__(self):
-        super().__init__("safety_controller")
+        super().__init__("safety")
         # Declare parameters to make them available for use
         self.declare_parameter("cmd_topic", "default")
         self.declare_parameter("laser_topic", "default")
@@ -56,6 +56,17 @@ class SafetyController(Node):
         # within the dist_ range
         self.danger_threshold = 0.1 # 20 percent
 
+        self.stop_msg = AckermannDriveStamped()
+        self.stop_msg.header.stamp = self.get_clock().now().to_msg()
+        self.stop_msg.header.frame_id = "base_link"
+
+        self.stop_msg.drive.steering_angle = 0.0 # set everything else to 0
+        self.stop_msg.drive.steering_angle_velocity = 0.0 # set everything else to 0
+        self.stop_msg.drive.speed = 0.0 # STOP THE CAR
+        self.stop_msg.drive.acceleration = 0.0 # set everything else to 0
+        self.stop_msg.drive.jerk = 0.0 # set everything else to 0
+
+
     def laser_callback(self, msg):
         # Save most recent laser data
         self.angles = np.linspace(start=msg.angle_min,
@@ -87,17 +98,8 @@ class SafetyController(Node):
             # self.get_logger().info(f"{self.danger_threshold}, {danger_rating}")
             if danger_rating > self.danger_threshold:
                 self.get_logger().info(f"STOPPED!")
-                drive_msg = AckermannDriveStamped()
-                drive_msg.header.stamp = self.get_clock().now().to_msg()
-                drive_msg.header.frame_id = "base_link"
 
-                drive_msg.drive.steering_angle = 0.0 # set everything else to 0
-                drive_msg.drive.steering_angle_velocity = 0.0 # set everything else to 0
-                drive_msg.drive.speed = 0.0 # STOP THE CAR
-                drive_msg.drive.acceleration = 0.0 # set everything else to 0
-                drive_msg.drive.jerk = 0.0 # set everything else to 0
-
-                self.safety_pub.publish(drive_msg)
+                self.safety_pub.publish(self.stop_msg)
         self.prev_cmd = msg.drive
 
 def main():

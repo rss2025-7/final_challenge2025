@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'heist_state = heist_controller.heist_state:main',
             'safety = heist_controller.safety:main',
+            'test_safety = heist_controller.test_safety:main',
         ],
     },
 )
