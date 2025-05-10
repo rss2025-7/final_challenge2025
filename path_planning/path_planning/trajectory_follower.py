@@ -8,9 +8,15 @@ import numpy as np
 import tf_transformations
 from heist_msgs.msg import HeistState
 from visualization_msgs.msg import Marker
+from enum import Enum
 
 from .utils import LineTrajectory
 
+class State(Enum):
+    FOLLOW = 1
+    PARK = 2
+    CORRECT = 3
+    END = 4
 
 class PurePursuit(Node):
     """ Implements Pure Pursuit trajectory tracking with a fixed lookahead and speed.
@@ -20,10 +26,11 @@ class PurePursuit(Node):
         super().__init__("trajectory_follower")
         self.declare_parameter('odom_topic', "default")
         self.declare_parameter('drive_topic', "default")
+        self.declare_parameter('full_run', "default")
 
         self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         self.drive_topic = self.get_parameter('drive_topic').get_parameter_value().string_value
-
+        self.full_run = self.get_parameter('full_run').get_parameter_value().bool_value
 
         self.state_pub = self.create_publisher(Int32, "/change_info", 1)
         self.state_sub = self.create_subscription(HeistState, "/heist_state", self.state_callback, 1)
@@ -59,8 +66,13 @@ class PurePursuit(Node):
         self.drive_pub.publish(drive_msg)
 
         self.initialized_traj = False
-    def state_callback(self, msg):
-        pass
+        self.valid_state = False
+
+    def state_callback(self, statemsg):
+        if statemsg.state == State.FOLLOW.value:
+            self.valid_state = True
+        else:
+            self.valid_state = False
 
 
     def find_point_along_trajectory(self, r, la, p1, p2):
@@ -104,17 +116,20 @@ class PurePursuit(Node):
         robot_position = odometry_msg.pose.pose.position
         robot_orientation = odometry_msg.pose.pose.orientation
         # self.get_logger().info("ODOM")
-        if self.initialized_traj:
+        if self.initialized_traj and ((self.full_run and self.valid_state is True) or (not self.full_run)):
             drive_msg = AckermannDriveStamped()
 
             # x, y, yaw
             robot_x = robot_position.x
             robot_y = robot_position.y
 
-            # if np.hypot(robot_x - self.goal[0], robot_y - self.goal[1]) <= 0.5:
-            #     drive_msg.drive.speed = 0.0
-            #     drive_msg.drive.steering_angle = 0.0
-            #     self.stop = True
+            if np.hypot(robot_x - self.goal[0], robot_y - self.goal[1]) <= 0.5:
+                drive_msg.drive.speed = 0.0
+                drive_msg.drive.steering_angle = 0.0
+                self.stop = True
+                msg = Int32()
+                msg.data = State.FOLLOW.value
+                self.state_pub.publish(msg)
 
             if not self.stop:
                 robot_yaw = tf_transformations.euler_from_quaternion([robot_orientation.x, robot_orientation.y,

@@ -1,12 +1,15 @@
 <launch>
     <node pkg="path_planning" exec="trajectory_planner" name="trajectory_planner" output="screen">
         <param from="$(find-pkg-share path_planning)/config/real/config.yaml"/>
+        <param from="$(find-pkg-share heist_controller)/config/config.yaml"/>
     </node>
     <node pkg="path_planning" exec="trajectory_follower" name="trajectory_follower">
         <param from="$(find-pkg-share path_planning)/config/real/config.yaml"/>
+        <param from="$(find-pkg-share heist_controller)/config/config.yaml"/>
     </node>
     <node pkg="localization" exec="particle_filter" name="particle_filter" output="screen">
         <param from="$(find-pkg-share path_planning)/config/real/pf_config.yaml"/>
+        <!-- <param from="$(find-pkg-share heist_controller)/config/config.yaml"/> -->
     </node>
     <node pkg="visual_servoing" name="red_stop" exec="red_stop" output="screen">
         <param name="drive_topic" value="/vesc/low_level/input/safety" />
@@ -18,6 +21,7 @@
     </node> -->
   <node pkg="visual_servoing" name="banana_detector" exec="banana_detector" output="screen">
   	<param name="drive_topic" value="/vesc/high_level/input/nav_0" />
+    <param from="$(find-pkg-share heist_controller)/config/config.yaml"/>
   </node>
    <node pkg="visual_servoing" name="parking_controller" exec="parking_controller" output="screen">
   </node>

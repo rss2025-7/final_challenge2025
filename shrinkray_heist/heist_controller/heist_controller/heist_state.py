@@ -37,7 +37,7 @@ class HeistStatePublisher(Node):
         self.get_logger().info("State Machine Publisher Initialized")
 
     def callback(self, msg: Int32):
-        if msg.data == 0:
+        if msg.data == self.state:
             self.go_next_state()
 
             state_msg = HeistState()
@@ -55,22 +55,7 @@ class HeistStatePublisher(Node):
         self.state += 1
         if self.state > State.CORRECT.value:
             self.state = State.FOLLOW.value
-            self.obj += 1
-
-    def publish(self):
-        # Publish PoseArray
-        pose_array = PoseArray()
-        pose_array.header.frame_id = "map"
-        pose_array.poses = self.array
-        self.publisher.publish(pose_array)
-
-        # Print to Command Line
-        points_str = '\n'+'\n'.join([f"({p.position.x},{p.position.y})" for p in self.array])
-        self.get_logger().info(f"Published 2 points: {points_str}")
-
-        # Reset Array
-        self.array = []
-    
+            self.obj += 1    
 
 def main(args=None):
     rclpy.init(args=args)
