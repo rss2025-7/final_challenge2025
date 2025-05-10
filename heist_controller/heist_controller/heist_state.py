@@ -28,23 +28,27 @@ class HeistStatePublisher(Node):
         self.state = State.FOLLOW.value
         self.obj = Obj.BANANA_A.value
 
-        state_msg = HeistState()
-        state_msg.state = self.state
-        state_msg.objective = self.obj
+        self.state_msg = HeistState()
+        self.state_msg.state = self.state
+        self.state_msg.objective = self.obj
         self.get_logger().info(f"Entered If, {self.state}, {self.obj}")
-        self.publisher.publish(state_msg)
+        self.publisher.publish(self.state_msg)
+
+        self.timer = self.create_timer(0.05, self.timer_callback)
 
         self.get_logger().info("State Machine Publisher Initialized")
+
+    def timer_callback(self):
+        self.publisher.publish(self.state_msg)
 
     def callback(self, msg: Int32):
         if msg.data == self.state:
             self.go_next_state()
 
-            state_msg = HeistState()
-            state_msg.state = self.state
-            state_msg.objective = self.obj
+            self.state_msg.state = self.state
+            self.state_msg.objective = self.obj
             self.get_logger().info(f"Entered If, {self.state}, {self.obj}")
-            self.publisher.publish(state_msg)
+            self.publisher.publish(self.state_msg)
         self.get_logger().info("CALLBACK")
 
     def go_next_state(self):
@@ -55,7 +59,7 @@ class HeistStatePublisher(Node):
         self.state += 1
         if self.state > State.CORRECT.value:
             self.state = State.FOLLOW.value
-            self.obj += 1    
+            self.obj += 1
 
 def main(args=None):
     rclpy.init(args=args)

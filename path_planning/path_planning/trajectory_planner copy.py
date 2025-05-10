@@ -129,7 +129,7 @@ class PathPlan(Node):
         # we don't need to run search on orientation
         self.current_pose = (pose.pose.pose.position.x, pose.pose.pose.position.y) # extract x,y
         self.get_logger().info(f"Initialized current pose {self.current_pose}, px {self.convert_world_to_pixel(self.current_pose)}")
-        self.plan_path(self.current_pose, self.banana1, self.map_data)
+        # self.plan_path(self.current_pose, self.banana1, self.map_data)
 
         # if self.current_pose is not None and self.banana1 is not None and self.banana2 is not None and self.map_data is not None:
 

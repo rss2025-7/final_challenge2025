@@ -41,12 +41,12 @@ class PathPlan(Node):
         self.declare_parameter('odom_topic', "default")
         self.declare_parameter('map_topic', "default")
         self.declare_parameter('initial_pose_topic', "default")
-        self.declare_parameter('full_run', "default")
-        
+        self.declare_parameter('full_run', True)
+
         self.state_pub = self.create_publisher(Int32, "/change_info", 1)
         self.state_sub = self.create_subscription(HeistState, "/heist_state", self.state_callback, 1)
         self.full_run = self.get_parameter('full_run').get_parameter_value().bool_value
-        
+
         self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         self.map_topic = self.get_parameter('map_topic').get_parameter_value().string_value
         self.initial_pose_topic = self.get_parameter('initial_pose_topic').get_parameter_value().string_value
@@ -99,31 +99,42 @@ class PathPlan(Node):
 
         self.current_pose = None
         self.known = [
-                      (627, 456),
-                      (915, 456),
-                      (919, 325),
-                      (1061, 291),
+                      (-4.635417938232422, 25.2034912109375),
+                      (-20.21269416809082, 25.44011116027832),
+                      (-20.402408599853516, 32.01554870605469),
+                      (-27.574138641357422, 33.71652603149414),
                       ]
-        self.home = None
+        self.home = (-19.83066177368164, 1.331664800643921)
+
+        self.goal1 = None
+
         self.banana1 = None
         self.banana2 = None
+        self.path_initialized = False
 
         self.visualize_search = False
         self.valid_state = False
         self.prev_state = None
 
     def state_callback(self, statemsg):
-        if self.prev_state != statemsg.state and statemsg.state == State.FOLLOW.value:
-            if statemsg.objective == Obj.BANANA_A:
+        self.get_logger().info(f"Entered state_callback w {statemsg.state}, {statemsg.objective}")
+        if not self.path_initialized and statemsg.state == State.FOLLOW.value and self.banana1 is not None and self.banana2 is not None:
+            self.get_logger().info(f"entered")
+            if statemsg.objective == Obj.BANANA_A.value:
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
-                self.plan_path(self.home, self.banana1, self.map_data)
-            elif statemsg.objective == Obj.BANANA_B:
+                self.plan_path(self.home, self.known[self.banana1], self.map_data)
+            elif statemsg.objective == Obj.BANANA_B.value:
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
-                self.plan_path(self.banana1, self.banana2, self.map_data)
-            elif statemsg.objective == Obj.HOME:
+                self.plan_path(self.known[self.banana1], self.known[self.banana2], self.map_data)
+            elif statemsg.objective == Obj.HOME.value:
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
-                self.plan_path(self.banana2, self.home, self.map_data)
+                self.plan_path(self.known[self.banana2], self.home, self.map_data)
+            else:
+                return
+            self.path_initialized = True
         self.prev_state = statemsg.state
+        if statemsg.state != State.FOLLOW.value:
+            self.path_initialized = False
 
     def map_cb(self, msg):
         self.map_info = msg.info
@@ -163,10 +174,10 @@ class PathPlan(Node):
         self.get_logger().info("Initialized map")
 
     def pose_cb(self, pose):
-        pass
+        # pass
         # we don't need to run search on orientation
-        # self.current_pose = (pose.pose.pose.position.x, pose.pose.pose.position.y) # extract x,y
-        # self.get_logger().info(f"Initialized current pose {self.current_pose}, px {self.convert_world_to_pixel(self.current_pose)}")
+        self.current_pose = (pose.pose.pose.position.x, pose.pose.pose.position.y) # extract x,y
+        self.get_logger().info(f"Initialized current pose {self.current_pose}, px {self.convert_world_to_pixel(self.current_pose)}")
         # self.plan_path(self.current_pose, self.banana1, self.map_data)
 
         # if self.current_pose is not None and self.banana1 is not None and self.banana2 is not None and self.map_data is not None:
@@ -184,23 +195,23 @@ class PathPlan(Node):
         #         self.plan_path(self.banana1, self.current_pose, self.map_data)
 
     def get_closest(self, px):
-        smallest_dist = np.inf
+        smallest_dist = 10000000000000000000
         best_i = 0
         for i, pt in enumerate(self.known):
-            dist = ((pt[0]-px[0])**2 - (pt[1]-px[1])**2) ** (1/2)
+            dist = ((pt[0]-px[0])**2 + (pt[1]-px[1])**2) ** (1/2)
             if dist < smallest_dist:
                 smallest_dist = dist
                 best_i = i
         return best_i
-    
+
     def goal_cb(self, msg):
         # we don't need to run search on orientation
         # banana_locations = msg.poses
         if self.goal1 == None:
             self.goal1 = (msg.pose.position.x, msg.pose.position.y)
         else:
-            px1 = self.convert_world_to_pixel(self.goal1)
-            px2 = self.convert_world_to_pixel((msg.pose.position.x, msg.pose.position.y))
+            px1 = self.goal1
+            px2 = (msg.pose.position.x, msg.pose.position.y)
             banana1 = self.get_closest(px1)
             banana2 = self.get_closest(px2)
             if banana1 < banana2:

@@ -24,7 +24,7 @@ class DetectorNode(Node):
     def __init__(self):
         super().__init__("banana_detector")
         self.declare_parameter("drive_topic", "/vesc/high_level/input/nav_0")
-        self.declare_parameter('full_run', "default")
+        self.declare_parameter('full_run', True)
         DRIVE_TOPIC = self.get_parameter("drive_topic").value # set in launch file; different for simulator vs racecar
         self.full_run = self.get_parameter('full_run').get_parameter_value().bool_value
 
@@ -46,7 +46,7 @@ class DetectorNode(Node):
 
     def state_callback(self, statemsg):
         """
-        Used to determine when we should run inference with camera. If the 
+        Used to determine when we should run inference with camera. If the
         state is a valid state (when we could potentiatlly see banana)
         then we should try to detect banana
         """
@@ -55,9 +55,9 @@ class DetectorNode(Node):
         else:
             self.valid_state = False
 
-        if statemsg.obj.value != self.prev_goal:
+        if statemsg.objective.value != self.prev_goal:
             self.saved_img = False
-            self.prev_goal = statemsg.obj.value
+            self.prev_goal = statemsg.objective.value
 
     def callback(self, img_msg):
         if (self.full_run and self.valid_state is True) or (not self.full_run):
@@ -78,7 +78,7 @@ class DetectorNode(Node):
                 cone_px.u, cone_px.v = bottomu, bottomv
                 self.last_banana = banana_coords
                 self.publisher.publish(cone_px)
-                
+
 
                 # drive_cmd.header.stamp = self.get_clock().now().to_msg()
                 # drive_cmd.header.frame_id = "base_link"
@@ -93,7 +93,7 @@ class DetectorNode(Node):
                 out = self.detector.draw_box(original_image, predictions, draw_all=True)
                 debug_msg = self.bridge.cv2_to_imgmsg(np.array(out), "bgr8")
                 self.debug_pub.publish(debug_msg)
-           
+
 
                 if not self.saved_img:
                     save_path = f"{os.path.dirname(__file__)}/tf_output_{self.prev_goal}.png"
@@ -108,8 +108,8 @@ class DetectorNode(Node):
                 out = self.detector.draw_box(original_image, predictions, draw_all=True)
                 debug_msg = self.bridge.cv2_to_imgmsg(np.array(out), "bgr8")
                 self.debug_pub.publish(debug_msg)
-           
-                
+
+
             # elif self.last_banana is not None:
             #     cone_px = ConeLocationPixel()
             #     bottomv = float(self.last_banana[3])r
@@ -117,7 +117,7 @@ class DetectorNode(Node):
             #     cone_px.u, cone_px.v = bottomu, bottomv
             #     self.publisher.publish(cone_px)
 
-            
+
 
 def main(args=None):
     rclpy.init(args=args)
