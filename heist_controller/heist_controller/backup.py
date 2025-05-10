@@ -66,14 +66,14 @@ class BackupController(Node):
                       ]
         
         # Commands IF not returning home
-        self.vel = [-0.5, -0.5, -0.5, -0.5]
-        self.ang = [0.0, 0.0, 0.0, 0.0]
-        self.backup_time = [3.5, 3.5, 3.5, 3.5]
+        self.vel = [-0.5, -0.5, -0.5, 0.0]
+        self.ang = [0.0, 0.0, np.deg2rad(90), 0.0]
+        self.backup_time = [3.5, 2, 3.5, 0.0]
 
         # Commands IF returning home
-        self.home_vel = [-0.5, -0.5, -0.5, -0.5]
-        self.home_ang = [0.0, 0.0, 0.0, 0.0]
-        self.home_backup_time = [3.5, 3.5, 3.5, 3.5]
+        self.home_vel = [0.0, -0.5, -0.5, -0.5]
+        self.home_ang = [0.0, np.deg2rad(90), np.deg2rad(-90), 0.0]
+        self.home_backup_time = [0.0, 3.5, 3.5, 2]
 
         self.objective = None
 
