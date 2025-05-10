@@ -33,6 +33,7 @@ class PurePursuit(Node):
         self.full_run = self.get_parameter('full_run').get_parameter_value().bool_value
 
         self.state_pub = self.create_publisher(Int32, "/change_info", 1)
+        self.traj_done_pub = self.create_publisher(Int32, "/traj_done", 1)
         self.state_sub = self.create_subscription(HeistState, "/heist_state", self.state_callback, 1)
 
         self.lookahead = 1.4  # FILL IN # #1.4
@@ -141,9 +142,13 @@ class PurePursuit(Node):
                 drive_msg.drive.speed = 0.0
                 drive_msg.drive.steering_angle = 0.0
                 self.stop = True
+                # msg = Int32()
+                # msg.data = State.FOLLOW.value
+                # self.state_pub.publish(msg)
+
                 msg = Int32()
-                msg.data = State.FOLLOW.value
-                self.state_pub.publish(msg)
+                msg.data = 1
+                self.traj_done_pub.publish(msg)
                 self.initialized_traj = False
 
             if not self.stop:

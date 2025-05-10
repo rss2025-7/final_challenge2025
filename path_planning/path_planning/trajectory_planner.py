@@ -45,6 +45,7 @@ class PathPlan(Node):
 
         self.state_pub = self.create_publisher(Int32, "/change_info", 1)
         self.state_sub = self.create_subscription(HeistState, "/heist_state", self.state_callback, 1)
+        self.traj_done_sub = self.create_subscription(Int32, "/traj_done", self.traj_done_callback, 1)
         self.full_run = self.get_parameter('full_run').get_parameter_value().bool_value
 
         self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
@@ -105,6 +106,7 @@ class PathPlan(Node):
                       (-27.922807693481445, 33.37120819091797),
                       ]
         self.home = (-19.83066177368164, 1.331664800643921)
+        self.intermediate = (-5.411397933959961, 25.39836883544922)
 
         self.goal1 = None
 
@@ -116,23 +118,45 @@ class PathPlan(Node):
         self.valid_state = False
         self.prev_state = None
 
+        self.parts = []
+        self.parts_index = 0
+
+    def traj_done_callback(self, traj_done_msg):
+        if traj_done_msg.data == 1:
+            self.path_initialized = False
+            self.parts_index += 1
+
+        if self.parts_index >= (len(self.parts) - 1):
+            msg = Int32()
+            msg.data = State.FOLLOW.value
+            self.state_pub.publish(msg)
+        else:
+            self.plan_path(self.parts[self.parts_index], self.parts[self.parts_index+1], self.map_data)
+            self.path_initialized = True
+        pass
+
     def state_callback(self, statemsg):
         # self.get_logger().info(f"Entered state_callback w {statemsg.state}, {statemsg.objective}")
         if not self.path_initialized and statemsg.state == State.FOLLOW.value and self.banana1 is not None and self.banana2 is not None:
             self.get_logger().info(f"entered")
             if statemsg.objective == Obj.BANANA_A.value:
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
-                self.plan_path(self.home, self.known[self.banana1], self.map_data)
+                if self.banana1 == 0:
+                    self.parts = [self.home, self.known[self.banana1]]
+                else:
+                    self.parts = [self.home, self.intermediate, self.known[self.banana1]]
             elif statemsg.objective == Obj.BANANA_B.value:
                 self.trajectory.clear()
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
-                self.plan_path(self.known[self.banana1], self.known[self.banana2], self.map_data)
+                self.parts = [self.known[self.banana1], self.known[self.banana2]]
             elif statemsg.objective == Obj.HOME.value:
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
-                self.plan_path(self.known[self.banana2], self.home, self.map_data)
+                self.parts = [self.known[self.banana2], self.home]
             else:
                 return
+            self.parts_index = 0
             self.path_initialized = True
+            self.plan_path(self.parts[0], self.parts[1], self.map_data)
         self.prev_state = statemsg.state
         if statemsg.state != State.FOLLOW.value:
             self.path_initialized = False
