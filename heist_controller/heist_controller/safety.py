@@ -11,6 +11,7 @@ class SafetyController(Node):
     def __init__(self):
         super().__init__("safety")
         # Declare parameters to make them available for use
+        self.get_logger().info("entered safety init")
         self.declare_parameter("cmd_topic", "default")
         self.declare_parameter("laser_topic", "default")
         self.declare_parameter("drive_topic", "default")
@@ -57,7 +58,7 @@ class SafetyController(Node):
         # 0.2 -> 0.15 -> 0.1 -> 0.075 -> 0.15 -> .2 -> 0.1
         self.ang_range = 0.1 # in radians
         # Tolerance, car will stop if predicted distance from wall is <= tolerance
-        self.dist_tolerance = 0.5 # in meters
+        self.dist_tolerance = 0.75 # in meters
         # Danger threshold, car will stop if this % of range data reads
         # within the dist_ range
         self.danger_threshold = 0.1 # 20 percent
@@ -73,7 +74,7 @@ class SafetyController(Node):
         self.stop_msg.drive.jerk = 0.0 # set everything else to 0
 
         self.crossing = False
-
+        self.get_logger().info("initialized safety controller")
     def pose_callback(self, msg):
         """
         Odometry callback to check if we're in TA crossing

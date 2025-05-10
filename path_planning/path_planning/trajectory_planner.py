@@ -100,9 +100,9 @@ class PathPlan(Node):
         self.current_pose = None
         self.known = [
                       (-5.0902533531188965, 25.827289581298828),
-                      (-20.21269416809082, 25.44011116027832),
-                      (-20.402408599853516, 32.01554870605469),
-                      (-27.574138641357422, 33.71652603149414),
+                      (-20.872953414916992, 25.27769660949707),
+                      (-19.75933265686035, 32.785926818847656),
+                      (-27.922807693481445, 33.37120819091797),
                       ]
         self.home = (-19.83066177368164, 1.331664800643921)
 
@@ -117,7 +117,7 @@ class PathPlan(Node):
         self.prev_state = None
 
     def state_callback(self, statemsg):
-        self.get_logger().info(f"Entered state_callback w {statemsg.state}, {statemsg.objective}")
+        # self.get_logger().info(f"Entered state_callback w {statemsg.state}, {statemsg.objective}")
         if not self.path_initialized and statemsg.state == State.FOLLOW.value and self.banana1 is not None and self.banana2 is not None:
             self.get_logger().info(f"entered")
             if statemsg.objective == Obj.BANANA_A.value:

@@ -47,7 +47,7 @@ class HeistStatePublisher(Node):
 
             self.state_msg.state = self.state
             self.state_msg.objective = self.obj
-            self.get_logger().info(f"Entered If, {self.state}, {self.obj}")
+            self.get_logger().info(f"Entered If, state: {self.state}, objective: {self.obj}")
             self.publisher.publish(self.state_msg)
         self.get_logger().info("CALLBACK")
 

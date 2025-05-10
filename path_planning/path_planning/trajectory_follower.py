@@ -35,7 +35,7 @@ class PurePursuit(Node):
         self.state_pub = self.create_publisher(Int32, "/change_info", 1)
         self.state_sub = self.create_subscription(HeistState, "/heist_state", self.state_callback, 1)
 
-        self.lookahead = 1.3  # FILL IN # #1.4
+        self.lookahead = 1.4  # FILL IN # #1.4
         self.speed = 0.5  # FILL IN #
         self.wheelbase_length = 0.34  # FILL IN #
 
