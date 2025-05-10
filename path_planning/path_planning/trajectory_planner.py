@@ -9,6 +9,7 @@ from heist_msgs.msg import HeistState
 from .utils import LineTrajectory
 from std_msgs.msg import Int32
 import numpy as np
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 # from skimage.morphology import disk, dilation
 
 from tf_transformations import euler_from_quaternion
@@ -38,6 +39,12 @@ class PathPlan(Node):
 
     def __init__(self):
         super().__init__("trajectory_planner")
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10
+        )
         self.declare_parameter('odom_topic', "default")
         self.declare_parameter('map_topic', "default")
         self.declare_parameter('initial_pose_topic', "default")
