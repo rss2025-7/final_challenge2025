@@ -116,6 +116,8 @@ class PurePursuit(Node):
         robot_position = odometry_msg.pose.pose.position
         robot_orientation = odometry_msg.pose.pose.orientation
         # self.get_logger().info("ODOM")
+        # self.get_logger().info(f"initialized trajectory? {self.initialized_traj}")
+        # self.get_logger().info(f"valid state? {self.valid_state}")
         if self.initialized_traj and ((self.full_run and self.valid_state is True) or (not self.full_run)):
             drive_msg = AckermannDriveStamped()
 
@@ -130,6 +132,7 @@ class PurePursuit(Node):
                 msg = Int32()
                 msg.data = State.FOLLOW.value
                 self.state_pub.publish(msg)
+                self.initialized_traj = False
 
             if not self.stop:
                 robot_yaw = tf_transformations.euler_from_quaternion([robot_orientation.x, robot_orientation.y,
@@ -200,6 +203,7 @@ class PurePursuit(Node):
         self.traj_points = traj_points.T
 
         self.initialized_traj = True
+        self.stop = False
 
     def create_point_marker(self, point, frame):
         marker = Marker()

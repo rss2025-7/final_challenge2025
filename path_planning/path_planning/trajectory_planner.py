@@ -99,7 +99,7 @@ class PathPlan(Node):
 
         self.current_pose = None
         self.known = [
-                      (-4.635417938232422, 25.2034912109375),
+                      (-5.0902533531188965, 25.827289581298828),
                       (-20.21269416809082, 25.44011116027832),
                       (-20.402408599853516, 32.01554870605469),
                       (-27.574138641357422, 33.71652603149414),
@@ -124,6 +124,7 @@ class PathPlan(Node):
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
                 self.plan_path(self.home, self.known[self.banana1], self.map_data)
             elif statemsg.objective == Obj.BANANA_B.value:
+                self.trajectory.clear()
                 self.get_logger().info(f"Initialized current pose {0}, px {0}")
                 self.plan_path(self.known[self.banana1], self.known[self.banana2], self.map_data)
             elif statemsg.objective == Obj.HOME.value:

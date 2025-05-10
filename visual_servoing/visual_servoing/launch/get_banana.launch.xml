@@ -3,6 +3,7 @@
         <param name="full_run" value="true" />
     </node>
     <node pkg="heist_controller" exec="backup_controller" name="backup_controller" output="screen">
+        <param name="drive_topic" value = "/vesc/high_level/input/nav_0"/>
     </node>
     <node pkg="path_planning" exec="trajectory_planner" name="trajectory_planner" output="screen">
         <param from="$(find-pkg-share path_planning)/config/real/config.yaml"/>

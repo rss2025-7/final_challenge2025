@@ -55,9 +55,9 @@ class DetectorNode(Node):
         else:
             self.valid_state = False
 
-        if statemsg.objective.value != self.prev_goal:
+        if statemsg.objective != self.prev_goal:
             self.saved_img = False
-            self.prev_goal = statemsg.objective.value
+            self.prev_goal = statemsg.objective
 
     def callback(self, img_msg):
         if (self.full_run and self.valid_state is True) or (not self.full_run):

@@ -78,7 +78,7 @@ class ParkingController(Node):
             if time.time() - self.banana_timer > 6:
                 self.banana_timer = 0
                 msg = Int32()
-                msg.data = State.FOLLOW.value
+                msg.data = State.PARK.value
                 self.state_pub.publish(msg)
             return
 
@@ -116,7 +116,7 @@ class ParkingController(Node):
                     steer_angle = -1*np.sign(way_x)* (0.25) #desired angle in radians #0.35
                     # self.get_logger().info(f"steering angle backward: {steer_angle}")
                 elif self.backward_count == 7:
-                    
+
                     # self.get_logger().info(f"count: {self.backward_count}")
                     self.moving_backward = False
                     self.backward_count = 0

@@ -39,7 +39,7 @@ class BackupController(Node):
         self.timer = self.create_timer(0.05, self.on_timer)
 
         self.drive_pub = self.create_publisher(
-            AckermannDriveStamped, 
+            AckermannDriveStamped,
             self.DRIVE_TOPIC,
             10)
 
@@ -49,27 +49,28 @@ class BackupController(Node):
 
         self.drive_msg.drive.steering_angle = 0.0
         self.drive_msg.drive.steering_angle_velocity = 0.0 # change as quick as possible
-        self.drive_msg.drive.speed = self.VELOCITY # m/s
+        self.drive_msg.drive.speed = -0.5 # m/s
         self.drive_msg.drive.acceleration = 0.0 # change as quick as possible
-        self.drive_msg.drive.jerk = 0.0 # change as quick as possible        
+        self.drive_msg.drive.jerk = 0.0 # change as quick as possible
 
     def state_callback(self, statemsg):
         if statemsg.state == State.CORRECT.value:
             if not self.started:
                 self.started = True
-                self.start_time = time.time()                
+                self.start_time = time.time()
 
-    def _on_delay(self):
-        self.timer.cancel()
-        self.get_logger().info("Backup controller activated")
-        self.on_timer()
+    # def _on_delay(self):
+    #     self.timer.cancel()
+    #     self.get_logger().info("Backup controller activated")
+    #     self.on_timer()
 
     def on_timer(self):
+        # self.get_logger().info(f"{self.started}")
         if self.started:
             self.drive_pub.publish(self.drive_msg)
-            if time.time() - self.start_time > 2:
+            if time.time() - self.start_time > 3.5:
                 msg = Int32()
-                msg.data = State.FOLLOW.value
+                msg.data = State.CORRECT.value
                 self.state_pub.publish(msg)
                 self.started = False
 
