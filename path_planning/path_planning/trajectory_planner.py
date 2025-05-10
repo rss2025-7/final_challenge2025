@@ -64,11 +64,11 @@ class PathPlan(Node):
             10
         )
 
-        self.visited_points_pub = self.create_publisher(
-            PoseArray,
-            "/trajectory/visited_points",
-            10
-        )
+        # self.visited_points_pub = self.create_publisher(
+        #     PoseArray,
+        #     "/trajectory/visited_points",
+        #     10
+        # )
 
         self.trajectory = LineTrajectory(node=self, viz_namespace="/planned_trajectory")
         self.map_data = None
@@ -81,14 +81,14 @@ class PathPlan(Node):
         self.rotation_matrix_inv = np.eye(2)
         self.safety_cost_map = None
 
-        self.robot_radius = 0.75
+        self.robot_radius = 0.75 #0.75
         self.turning_radius = 1.0
 
         self.current_pose = None
         self.banana1 = None
         self.banana2 = None
 
-        self.visualize_search = True
+        self.visualize_search = False
     def state_callback(self, msg):
         pass
 
@@ -98,6 +98,8 @@ class PathPlan(Node):
         self.map_width = msg.info.width
         self.map_resolution = msg.info.resolution
         self.map_origin = (msg.info.origin.position.x, msg.info.origin.position.y)
+        self.get_logger().info("Map received")
+
 
         # occupancy grid has values 0 for free space and -1 for unknown
         self.map_data = np.array(msg.data).astype(np.int8).reshape(msg.info.height, msg.info.width)
@@ -226,18 +228,18 @@ class PathPlan(Node):
             # self.get_logger().info(f"{get_neighbors(current)}")
             for neighbor in get_neighbors(current):
                 u, v = neighbor
-                self.get_logger().info(f"safety map value {self.safety_cost_map[v,u]}")
+                # self.get_logger().info(f"safety map value {self.safety_cost_map[v,u]}")
                 if neighbor in completed or self.map_data[v,u] != 0:
                     # self.get_logger().info(f"{self.map_data[v,u]}")
                     # self.get_logger().info(f"safety map value {self.safety_cost_map[v,u]}")
                     continue
 
-                tentative_g_score = current_g + self.euclidean_distance(current, neighbor)
+                tentative_g_score = current_g + self.euclidean_distance(current, neighbor) + self.safety_cost_map[v,u]
 
                 if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                     g_score[neighbor] = tentative_g_score
-                    safety_cost = self.safety_cost_map[v,u]
-                    f_score = tentative_g_score + heuristic(neighbor, goal_px) + safety_cost# change between euclidean & heuristic
+                    # safety_cost = self.safety_cost_map[v,u]
+                    f_score = tentative_g_score + self.euclidean_distance(neighbor, goal_px) # + safety cost# change between euclidean & heuristic
                     # f_score = tentative_g_score + heuristic(neighbor, goal_px)
                     heapq.heappush(open_set, (f_score, tentative_g_score, neighbor))
                     came_from[neighbor] = current
@@ -274,8 +276,9 @@ class PathPlan(Node):
 
         scaled_map = np.zeros_like(dilated_map, dtype = np.uint8) # scale weights
         scaled_map[dilated_map != 0] = 100
-
+        
         self.map_data = scaled_map
+        self.map_data[:, 1301:] = 100 # dont use right
 
     def convert_pixel_to_world(self, pixel):
         pixel_coords = np.array([pixel[0], pixel[1]])
@@ -296,7 +299,7 @@ class PathPlan(Node):
         # euclidean distance for cost
         return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
 
-    def calculate_safety_cost_map(self, maxdist=4):
+    def calculate_safety_cost_map(self, maxdist=8):
         """
         Calculate a safety cost map where cost increases as distance to the nearest obstacle decreases.
         """
@@ -308,13 +311,12 @@ class PathPlan(Node):
 
         # distance transform
         distance_map = cv2.distanceTransform(1 - binary_map, cv2.DIST_L2, 5)
-
+        # self.get_logger().info(f"{distance_map}")
         # safety costs
-        safety_cost_map = (maxdist - distance_map)
-
+        # safety_cost_map = (maxdist - distance_map)
+        safety_cost_map = (1*(maxdist - distance_map))**2
         # clip negative values
-        safety_cost_map[safety_cost_map < 0] = 0
-
+        # safety_cost_map[safety_cost_map < 0] = 0
         self.safety_cost_map = safety_cost_map
         self.get_logger().info("Safety cost map calculated.")
 

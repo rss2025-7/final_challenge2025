@@ -45,7 +45,7 @@ class SafetyController(Node):
         # PARAMETERS TODO CAN CHANGE
         # Delta time, assumed increment for predicting where robot will be
         # 0.5 -> 0.25
-        self.DT = 0.25 # in seconds
+        self.DT = 1 # in seconds
         # Angle range, range of laserscan data we will scan over
         # rangle calculated as drive_command.steering_angle +/- ang_range
         # 0.2 -> 0.15 -> 0.1 -> 0.075 -> 0.15 -> .2 -> 0.1
@@ -76,6 +76,7 @@ class SafetyController(Node):
 
         self.ranges = np.array(msg.ranges)
         self.ranges = np.clip(self.ranges, a_min=msg.range_min, a_max=msg.range_max)
+        self.printed = False
 
     def listener_callback(self, msg):
         # self.get_logger().info(f"Entered callback")
@@ -97,9 +98,13 @@ class SafetyController(Node):
 
             # self.get_logger().info(f"{self.danger_threshold}, {danger_rating}")
             if danger_rating > self.danger_threshold:
-                self.get_logger().info(f"STOPPED!")
+                if not self.printed:
+                    self.get_logger().info(f"STOPPED!")
+                    self.printed = True
 
                 self.safety_pub.publish(self.stop_msg)
+            else:
+                self.printed = False
         self.prev_cmd = msg.drive
 
 def main():

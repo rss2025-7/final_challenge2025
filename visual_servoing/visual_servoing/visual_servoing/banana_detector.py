@@ -61,15 +61,15 @@ class DetectorNode(Node):
                 self.publisher.publish(cone_px)
                 
 
-                drive_cmd.header.stamp = self.get_clock().now().to_msg()
-                drive_cmd.header.frame_id = "base_link"
+                # drive_cmd.header.stamp = self.get_clock().now().to_msg()
+                # drive_cmd.header.frame_id = "base_link"
 
-                drive_cmd.drive.steering_angle = 0.
-                drive_cmd.drive.steering_angle_velocity = 0.0
-                drive_cmd.drive.speed = 0.
-                drive_cmd.drive.acceleration = 0.
-                drive_cmd.drive.jerk = 0.
-                self.drive_pub.publish(drive_cmd)
+                # drive_cmd.drive.steering_angle = 0.
+                # drive_cmd.drive.steering_angle_velocity = 0.0
+                # drive_cmd.drive.speed = 0.
+                # drive_cmd.drive.acceleration = 0.
+                # drive_cmd.drive.jerk = 0.
+                # self.drive_pub.publish(drive_cmd)
                 original_image = model_out["original_image"]
                 out = self.detector.draw_box(original_image, predictions, draw_all=True)
                 debug_msg = self.bridge.cv2_to_imgmsg(np.array(out), "bgr8")

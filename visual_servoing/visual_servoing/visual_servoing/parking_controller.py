@@ -16,7 +16,7 @@ class ParkingController(Node):
     def __init__(self):
         super().__init__("parking_controller")
 
-        self.declare_parameter("drive_topic")
+        self.declare_parameter("drive_topic", "/vesc/high_level/input/nav_0")
         DRIVE_TOPIC = self.get_parameter("drive_topic").value # set in launch file; different for simulator vs racecar
 
         self.drive_pub = self.create_publisher(AckermannDriveStamped, DRIVE_TOPIC, 10)
@@ -66,21 +66,22 @@ class ParkingController(Node):
             if error_distance > 0.1:
                 velo = 0.5
                 steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)
-                self.get_logger().info("RUNNING")
+                # self.get_logger().info("RUNNING")
             else:
-                if np.abs(np.arctan2(self.relative_y, self.relative_x)) > .175: #10 degrees
+                if np.abs(np.arctan2(self.relative_y, self.relative_x)) > .225: #.225 #10 degrees
                     self.moving_backward = True
                 velo = 0.0
                 steer_angle = 0.0
-                self.get_logger().info("STOPPED!")
+                # self.get_logger().info("STOPPED!")
         else:
             velo = -0.5
             self.backward_count += 1
             if self.backward_count <= 5:
-                steer_angle = -1*np.sign(way_x)* (0.35) #desired angle in radians
-                self.get_logger().info(f"steering angle backward: {steer_angle}")
-            elif self.backward_count == 10:
-                self.get_logger().info(f"count: {self.backward_count}")
+                steer_angle = -1*np.sign(way_x)* (0.25) #desired angle in radians #0.35
+                # self.get_logger().info(f"steering angle backward: {steer_angle}")
+            elif self.backward_count == 7:
+                
+                # self.get_logger().info(f"count: {self.backward_count}")
                 self.moving_backward = False
                 self.backward_count = 0
             steer_angle = 0.0
