@@ -133,7 +133,7 @@ class PathPlan(Node):
         # we don't need to run search on orientation
         self.current_pose = (pose.pose.pose.position.x, pose.pose.pose.position.y) # extract x,y
         self.get_logger().info(f"Initialized current pose {self.current_pose}, px {self.convert_world_to_pixel(self.current_pose)}")
-        self.plan_path(self.current_pose, self.banana1, self.map_data)
+        # self.plan_path(self.current_pose, self.banana1, self.map_data)
 
         # if self.current_pose is not None and self.banana1 is not None and self.banana2 is not None and self.map_data is not None:
 
@@ -189,7 +189,7 @@ class PathPlan(Node):
             ]
             return [
                 (u, v) for u, v in neighbors
-                if 0 <= u < self.map_width and 0 <= v < self.map_height
+                if 0 <= u <= self.map_width and 0 <= v <= self.map_height
             ]
         def heuristic(a, b):
             # manhattan distance for heuristic
@@ -239,7 +239,7 @@ class PathPlan(Node):
                 if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                     g_score[neighbor] = tentative_g_score
                     # safety_cost = self.safety_cost_map[v,u]
-                    f_score = tentative_g_score + self.euclidean_distance(neighbor, goal_px) # + safety cost# change between euclidean & heuristic
+                    f_score = tentative_g_score + self.euclidean_distance(neighbor, goal_px) # + safety cost# change between euclidean &amp; heuristic
                     # f_score = tentative_g_score + heuristic(neighbor, goal_px)
                     heapq.heappush(open_set, (f_score, tentative_g_score, neighbor))
                     came_from[neighbor] = current
@@ -276,7 +276,7 @@ class PathPlan(Node):
 
         scaled_map = np.zeros_like(dilated_map, dtype = np.uint8) # scale weights
         scaled_map[dilated_map != 0] = 100
-        
+
         self.map_data = scaled_map
         self.map_data[:, 1301:] = 100 # dont use right
 
