@@ -27,7 +27,6 @@ class ConeDetector(Node):
         super().__init__("cone_detector")
         # toggle line follower vs cone parker
         self.LineFollower = True
-        self.LineFollower = True
 
         # Subscribe to ZED camera RGB frames
         self.cone_pub = self.create_publisher(ConeLocationPixel, "/relative_cone_px", 10)
@@ -62,7 +61,7 @@ class ConeDetector(Node):
             cv2.rectangle(image, (0, 0), (60, 360), [0,0,0], -1) # left
             cv2.rectangle(image, (580, 0), (640, 360), [0,0,0], -1) # right
             cv2.rectangle(image, (0,270), (640, 360), [0,0,0], -1) # bot
-            cv2.rectangle(image, (240, 0), (400, 360), [0,0,0], -1) #mid
+            cv2.rectangle(image, (260, 0), (380, 360), [0,0,0], -1) #mid
             #cv2.rectangle(image, (0, 275), (640, 360), [255,255,255], -1)
 
         bbox = cd_color_segmentation(image, None)
@@ -140,7 +139,7 @@ class ConeDetector(Node):
             x_intersect = (line2_intercept - line1_intercept) / (line1_slope - line2_slope)
             y_intersect = line1_slope * x_intersect + line1_intercept
 
-            bottom_x = 480.0 # 480 -> 460 ! --> 500 -> 460
+            bottom_x = 430.0 # 480 -> 460 ! --> 500 -> 460
             bottom_y = 360.0
 
             x_intersect = x_intersect*4/5 + bottom_x/5
@@ -170,7 +169,7 @@ class ConeDetector(Node):
         # if no left line
         if line1_slope <= 0 and line2_slope <= 0:
             # x_intersect = 0.0
-            x_intersect = 440 #420   #440
+            x_intersect = 410 #420   #440 # 410
             y_intersect = image.shape[0]/2
         # if no right line
         elif line1_slope >= 0 and line2_slope >= 0:

@@ -73,7 +73,7 @@ def cd_color_segmentation(img, template):
         angle = rect[2]
         if rect[1][0] < rect[1][1]:
             angle += 90
-        threshold1 = 12 #15 -> 10
+        threshold1 = 10 #15
         # threshold2 = 40
         # if abs(angle) < threshold1 or abs(angle - 180) < threshold1 or abs(angle) > threshold2 or abs(angle - 180) > threshold2:
         #     continue
@@ -109,9 +109,9 @@ def cd_color_segmentation(img, template):
     if len(bounding_box) == 1:
         bounding_box.append(bounding_box[0])
         #bounding_box.append(((10, 10), (100, 100)))
-        print("Found one box")
+        # print("Found one box")
     elif len(bounding_box) == 0:
-        print("Found zero box")
+        # print("Found zero box")
         #bounding_box=[((10,10),(100,100)),((10,100),(100,10))]
         #raise ValueError("No bounding box found")
         bounding_box=[((0, 0), (0, 0)), ((0, 0), (0, 0))]

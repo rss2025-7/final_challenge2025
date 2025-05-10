@@ -27,7 +27,7 @@ class ParkingController(Node):
             self.relative_cone_callback, 1)
 
         self.parking_distance = .5 # meters; try playing with this number!
-        self.look_ahead = 1.1 #1.1
+        self.look_ahead = 1.3 #1.1 -> 1/4
         self.relative_x = 0
         self.relative_y = 0
         self.wheelbase = 0.34
@@ -86,7 +86,7 @@ class ParkingController(Node):
         #         self.backward_count = 0
         #     steer_angle = 0.0
         clipping_angle = 2.0 # 2.2
-        velo = 4.0
+        velo = 6.0
         # 8 for 2 m/s
         if not self.edge_case:
             if self.steer_angle > np.deg2rad(clipping_angle):
