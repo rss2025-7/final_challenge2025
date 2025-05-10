@@ -99,10 +99,6 @@ class DetectorNode(Node):
                     save_path = f"{os.path.dirname(__file__)}/tf_output_{self.prev_goal}.png"
                     out.save(save_path)
                     self.saved_img = True
-
-                    msg = Int32()
-                    msg.data = State.PARK.value
-                    self.state_pub.publish(msg)
             else:
                 original_image = model_out["original_image"]
                 out = self.detector.draw_box(original_image, predictions, draw_all=True)
