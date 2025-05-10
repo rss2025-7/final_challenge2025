@@ -83,10 +83,10 @@ class SafetyController(Node):
         # (-10.710579872131348, 21.428972244262695), px (727, 535)
 
         if -10.71 <= msg.pose.pose.position.x <= -5.76 and 15.13 <= msg.pose.pose.position.y <= 21.43:
-            self.get_logger().info(f"IN CROSSING")
+            # self.get_logger().info(f"IN CROSSING")
             self.crossing = True
         else:
-            self.get_logger().info(f"OUT OF CROSSING")
+            # self.get_logger().info(f"OUT OF CROSSING")
             self.crossing = False
     def laser_callback(self, msg):
         # Save most recent laser data

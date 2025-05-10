@@ -49,17 +49,18 @@ class RedStop(Node):
         if t_light:
             x1, y1, x2, y2 = t_light[0][0]
             cropped_image = image_copy[int(y1)-10:int(y2)+10, int(x1)-10:int(x2)+10]
-            bounding_box, red_present = cd_color_segmentation(cropped_image, None)
-            if red_present:
-                self.get_logger().info("Red light detected")
+            if cropped_image is not None and cropped_image.size != 0:
+                bounding_box, red_present = cd_color_segmentation(cropped_image, None)
+                if red_present:
+                    self.get_logger().info("Red light detected")
 
-                # stop the car
-                self.drive_pub.publish(self.stop_msg)
+                    # stop the car
+                    self.drive_pub.publish(self.stop_msg)
 
-                cv2.rectangle(image_copy, bounding_box[0], bounding_box[1], (255,0,255), 2)
-                cv2.putText(image_copy, "RED LIGHT", (240, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,255), 2)
-            debug_msg = self.bridge.cv2_to_imgmsg(np.array(cropped_image), "bgr8")
-            self.cropped_image_debug_pub.publish(debug_msg)
+                    cv2.rectangle(image_copy, bounding_box[0], bounding_box[1], (255,0,255), 2)
+                    cv2.putText(image_copy, "RED LIGHT", (240, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,255), 2)
+                debug_msg = self.bridge.cv2_to_imgmsg(np.array(cropped_image), "bgr8")
+                self.cropped_image_debug_pub.publish(debug_msg)
 
 
         else:

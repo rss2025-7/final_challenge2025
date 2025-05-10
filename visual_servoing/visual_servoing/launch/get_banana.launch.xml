@@ -4,6 +4,7 @@
     </node>
     <node pkg="heist_controller" exec="backup_controller" name="backup_controller" output="screen">
         <param name="drive_topic" value = "/vesc/high_level/input/nav_0"/>
+        <param name = "odom_topic" value = "/pf/pose/odom"/>
     </node>
     <node pkg="path_planning" exec="trajectory_planner" name="trajectory_planner" output="screen">
         <param from="$(find-pkg-share path_planning)/config/real/config.yaml"/>
@@ -17,9 +18,9 @@
         <param from="$(find-pkg-share path_planning)/config/real/pf_config.yaml"/>
         <!-- <param name="full_run" value="true" /> -->
     </node>
-    <!-- <node pkg="visual_servoing" name="red_stop" exec="red_stop" output="screen">
+    <node pkg="visual_servoing" name="red_stop" exec="red_stop" output="screen">
         <param name="drive_topic" value="/vesc/low_level/input/safety" />
-    </node> -->
+    </node>
     <node pkg="heist_controller" exec="safety" name="safety">
         <param name="cmd_topic" value="/vesc/low_level/ackermann_cmd" />
         <param name="laser_topic" value="/scan" />

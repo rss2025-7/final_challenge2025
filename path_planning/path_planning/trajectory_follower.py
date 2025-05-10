@@ -118,6 +118,18 @@ class PurePursuit(Node):
         # self.get_logger().info("ODOM")
         # self.get_logger().info(f"initialized trajectory? {self.initialized_traj}")
         # self.get_logger().info(f"valid state? {self.valid_state}")
+        # (-7.862502574920654, 24.39807891845703)
+        # (-34.25041198730469, 35.2408447265625)
+        # self.get_logger().info(f"lookahead distance is {self.lookahead}")
+
+        # (-21.41510581970215, 26.969566345214844)
+        # (-18.223608016967773, 24.596893310546875)
+        robot_x = robot_position.x
+        robot_y = robot_position.y
+        if -21.42 <= robot_x <= -18.22 and 24.6 <= robot_y <= 26.96:
+            self.lookahead = 1.2
+        else:
+            self.lookahead = 1.4
         if self.initialized_traj and ((self.full_run and self.valid_state is True) or (not self.full_run)):
             drive_msg = AckermannDriveStamped()
 

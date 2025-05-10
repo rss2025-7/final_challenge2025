@@ -64,16 +64,16 @@ class BackupController(Node):
                       (-20.402408599853516, 32.01554870605469),
                       (-27.574138641357422, 33.71652603149414),
                       ]
-        
+
         # Commands IF not returning home
         self.vel = [-0.5, -0.5, -0.5, 0.0]
-        self.ang = [0.0, 0.0, np.deg2rad(90), 0.0]
-        self.backup_time = [3.5, 2, 3.5, 0.0]
+        self.ang = [0.0, 0.0, np.deg2rad(-90), 0.0]
+        self.backup_time = [2.5, 1.75, 1.0, 0.0]
 
         # Commands IF returning home
         self.home_vel = [0.0, -0.5, -0.5, -0.5]
-        self.home_ang = [0.0, np.deg2rad(90), np.deg2rad(-90), 0.0]
-        self.home_backup_time = [0.0, 3.5, 3.5, 2]
+        self.home_ang = [0.0, np.deg2rad(-90), np.deg2rad(90), 0.0]
+        self.home_backup_time = [0.0, 1.2, 1.0, 2]
 
         self.objective = None
 
@@ -94,6 +94,8 @@ class BackupController(Node):
     #     self.on_timer()
 
     def get_closest(self, px):
+        self.get_logger().info(f"robot pose: {px}")
+        self.get_logger().info(f"known: {self.known}")
         smallest_dist = 10000000000000000000
         best_i = 0
         for i, pt in enumerate(self.known):
@@ -114,15 +116,18 @@ class BackupController(Node):
         # self.get_logger().info(f"{self.started}")
         if self.started:
             if self.est_banana is None:
-                self.est_banana = self.get_closest(self.est_robot) 
+                self.est_banana = self.get_closest(self.est_robot)
 
                 if self.objective == Obj.BANANA_A.value:
-                    self.drive_msg.speed = self.vel[self.est_banana]
-                    self.drive_msg.steering_angle = self.ang[self.est_banana]
+                    self.get_logger().info("entered next banana backup")
+                    self.drive_msg.drive.speed = self.vel[self.est_banana]
+                    self.drive_msg.drive.steering_angle = self.ang[self.est_banana]
                     self.timer_max = self.backup_time[self.est_banana]
                 elif self.objective == Obj.BANANA_B.value:
-                    self.drive_msg.speed = self.home_vel[self.est_banana]
-                    self.drive_msg.steering_angle = self.home_ang[self.est_banana]
+                    self.get_logger().info("entered going home backup")
+                    self.get_logger().info(f"at {self.est_banana}")
+                    self.drive_msg.drive.speed = self.home_vel[self.est_banana]
+                    self.drive_msg.drive.steering_angle = self.home_ang[self.est_banana]
                     self.timer_max = self.home_backup_time[self.est_banana]
 
             self.drive_pub.publish(self.drive_msg)
